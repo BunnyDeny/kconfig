@@ -128,7 +128,7 @@ defconfig 必须放在 `configs/`（或 `DEFCONFIG_DIR` 指定的目录）下。
 
 **覆盖。**对所有符号执行全量重置，再叠加 defconfig 中的差异条目，最后写入 `.config` 并生成头文件。
 
-如果你手动改了 `.config` 之后又跑了一次 `make xxx_defconfig`，手动改动**全部丢失**，不会保留。
+如果你手动改了 `.config` 之后又跑了一次 `make xxx_defconfig`，手动改动**全部丢失**，不会保留。实际上，任何情况下，都不应该手动更改.config，任何的xxx_defconfig，因为这些文件设计之初就是让程序去生成的而不是让用户更改的
 
 ---
 
