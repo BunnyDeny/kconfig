@@ -93,69 +93,84 @@ make defconfig
 
 ### ⚡ `make defconfig`
 
-快速恢复到某套预设配置。默认加载 `$(DEFAULT_DEFCONFIG)`（即 `configs/example_defconfig`），你也可以通过 `DEFAULT_DEFCONFIG` 变量改它。
+一切从这里开始。这是一个"回到起点"的命令——将**所有配置符号重置为 Kconfig 默认值**，然后生成 `.config` 和头文件。
 
-流程：**全量重置所有符号为默认值** → 应用 defconfig 中的差异条目 → 写入 `.config` → 生成头文件。
+默认加载的 defconfig 由 `$(DEFAULT_DEFCONFIG)` 指定（默认是 `configs/example_defconfig`）。你可以把它替换成自己的板级配置。
 
-> ⚠️ 这会**覆盖**你当前的 `.config`，旧配置全部丢失。想保留旧配置请先用 `make savedefconfig` 存一份。
+流程：**全量重置 → 写入 .config → 生成头文件**。
+
+> ⚠️ 这会**覆盖**当前的 `.config`，旧配置全部丢失。
+
+### 💾 `make savedefconfig`
+
+把当前 `.config` 导出为一个**最小差异 defconfig**，只保存和默认值不同的条目。生成位置是 `configs/defconfig`。
+
+```bash
+make menuconfig                          # 微调配置
+make savedefconfig                       # 导出为 configs/defconfig
+mv configs/defconfig configs/stm32f4_defconfig  # 改个有意义的文件名
+```
+
+> defconfig 就来自这里——不需要手写，也最好不要手写。
 
 ### 📂 `make xxx_defconfig` ⭐ 重点
 
-这是日常开发中最常用的命令——**一套 defconfig = 一块板子 / 一种工作模式**。
-
-#### 🗂️ 文件必须在哪里？
-
-defconfig 文件**必须放在 `configs/` 目录下**（或者你通过 `DEFCONFIG_DIR` 指定的目录），别无他处。系统会去 `configs/` 里查找对应的文件：
+这是 **`savedefconfig` 的逆操作**。`xxx` 就是 `configs/` 目录下的 defconfig 文件名（去掉路径前缀和 `_defconfig` 后缀）：
 
 ```bash
-make stm32f4_defconfig   # 查找 configs/stm32f4_defconfig ✅
-make qemu_defconfig      # 查找 configs/qemu_defconfig   ✅
-make some/config         # ❌ 不行，不支持子目录路径
+make stm32f4_defconfig   # 加载 configs/stm32f4_defconfig ✅
+make qemu_defconfig      # 加载 configs/qemu_defconfig   ✅
 ```
+
+defconfig 必须放在 `configs/`（或 `DEFCONFIG_DIR` 指定的目录）下。
 
 #### 🔄 增量还是覆盖？
 
-**覆盖。**`make xxx_defconfig` 的行为是"全量重置再应用"：
+**覆盖。**对所有符号执行全量重置，再叠加 defconfig 中的差异条目，最后写入 `.config` 并生成头文件。
 
-1. 🧹 所有配置符号重置为 `Kconfig` 中定义的默认值
-2. 📝 读入 defconfig 文件中的差异条目，覆写对应符号
-3. 💾 写入 `.config`（完整配置）
-4. 🧾 生成 `include/kconfig.h` 头文件
+如果你手动改了 `.config` 之后又跑了一次 `make xxx_defconfig`，手动改动**全部丢失**，不会保留。
 
-如果你手动改了 `.config` 之后又跑了一次 `make xxx_defconfig`，手动改动会**全部丢失**，不会保留。
+---
+
+### 🔁 核心工作流
+
+这是日常开发的标准流程：
 
 ```bash
-# 典型工作流
-git clone https://github.com/your/project.git
-cd project
-make stm32f4_defconfig   # 一键配置好这块板子的所有选项
-make menuconfig          # 如有需要，微调几个选项
-make                     # 编译
+# 1️⃣ 从一个已知配置开始（项目自带 / 别人的 defconfig / 用 make defconfig）
+make stm32f4_defconfig
+
+# 2️⃣ 按需微调
+make menuconfig
+
+# 3️⃣ 把调好的配置存为新的 defconfig
+make savedefconfig
+mv configs/defconfig configs/myboard_defconfig
+
+# 4️⃣ 以后就能一键恢复了
+make myboard_defconfig
 ```
 
-#### 🎯 和 `make menuconfig` 怎么配合？
+```mermaid
+graph LR
+    A[make defconfig] --> B[make menuconfig]
+    C[make xxx_defconfig] --> B
+    B --> D[make savedefconfig]
+    D --> E["mv configs/defconfig<br/>configs/xxx_defconfig"]
+    E --> C
+```
 
-- `make xxx_defconfig` → 选择"配置模板"（板级 / 模式级）
-- `make menuconfig`  → 在模板基础上"微调"
-- `make oldconfig`   → Kconfig 新增了选项时，补上默认值
+> 💡 总结：`defconfig` / `xxx_defconfig` 是"读入"，`savedefconfig` 是"写出"，`menuconfig` 是"编辑"。三者围着 `.config` 转。
+
+---
 
 ### 🔄 `make oldconfig`
 
 当你更新了 `Kconfig` 文件（比如新增了一个 `config NEW_OPTION`）但不想重头配置一遍时，用这个命令。
 
-它会读取你现有的 `.config`，保留所有已有选项的值，只对**新增的符号**填入其默认值。不会覆盖或丢失任何现存配置。
+它会读取现有的 `.config`，保留所有已有选项的值，只对**新增的符号**填入默认值。不会覆盖任何现存配置。
 
 > 适合升级场景：拉了个新版本代码，Kconfig 多了几个选项，跑一下 `make oldconfig` 就行。
-
-### 💾 `make savedefconfig`
-
-把当前 `.config` 导出为一个**最小差异 defconfig**——只保存那些和你 Kconfig 默认值不同的条目，非常精简。文件生成在 `configs/defconfig`。
-
-```bash
-make menuconfig       # 调好配置
-make savedefconfig    # 保存为 configs/defconfig
-mv configs/defconfig configs/myboard_defconfig  # 改个名
-```
 
 ### 🧹 `make mrproper`
 
