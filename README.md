@@ -1,101 +1,158 @@
-# Kconfig Build System
+# 🔧 Kconfig Build System
 
-A standalone Kconfig build system that generates `.config` and C header files from Kconfig definitions. Built on top of [kconfiglib](https://github.com/ulfalizer/Kconfiglib).
+✨ 一个独立的 Kconfig 构建系统，基于 [kconfiglib](https://github.com/ulfalizer/Kconfiglib) 构建，用于将 Kconfig 配置定义转化为 `.config` 文件和 C 头文件。
 
-## Requirements
+---
 
-- Python 3.8+
-- kconfiglib (includes the `menuconfig` TUI)
+## 📦 环境要求
 
-### Install kconfiglib
+- 🐍 Python 3.8+
+- 📚 kconfiglib（包含 `menuconfig` 交互式 TUI）
+
+### 🚀 安装 kconfiglib
 
 ```bash
-# Debian / Ubuntu
+# Debian / Ubuntu 🐧
 sudo apt install python3-kconfiglib
 
-# Or via pip
+# 或者通过 pip 📦
 pip3 install kconfiglib
 ```
 
-Verify installation:
+### ✅ 验证安装
 
 ```bash
 python3 -c "from kconfiglib import Kconfig; from menuconfig import menuconfig; print('OK')"
 ```
 
-## Quick Start
+看到 `OK` 就说明装好了 🎉
+
+---
+
+## 🏃 快速开始
 
 ```bash
 git clone https://github.com/BunnyDeny/kconfig.git
 cd kconfig
 
-# Launch interactive TUI to configure
+# 启动交互式 TUI 配置界面 🎛️
 make menuconfig
 
-# Or load a defconfig directly
+# 或者直接加载预设的 defconfig ⚡
 make defconfig
 ```
 
-After either command, you get:
-- `.config` — full configuration in key=value format
-- `include/kconfig.h` — C header with `#define` macros (by default without `CONFIG_` prefix, so `CONFIG_FOO=y` becomes `#define FOO 1`)
+无论哪种方式，你都会得到：
+- 📄 `.config` — 键值对格式的完整配置
+- 🧾 `include/kconfig.h` — 带有 `#define` 宏的 C 头文件
 
-## Makefile Targets
+> 🔍 默认行为：`CONFIG_FOO=y` → `#define FOO 1`（自动剥离 `CONFIG_` 前缀）
 
-| Target | Description |
-|--------|-------------|
-| `make menuconfig` | Interactive TUI configuration |
-| `make defconfig` | Load the default defconfig (`$(DEFAULT_DEFCONFIG)` → `.config` → header) |
-| `make xxx_defconfig` | Load `$(DEFCONFIG_DIR)/xxx_defconfig` |
-| `make oldconfig` | Merge existing `.config` with defaults for newly added Kconfig symbols |
-| `make savedefconfig` | Save current `.config` as a minimal defconfig to `$(DEFCONFIG_DIR)/defconfig` |
-| `make mrproper` | Remove `.config`, `.config.old`, and the generated header |
+---
 
-## Configuration Variables
+## 🎯 Makefile 目标一览
 
-Override these in your own Makefile or via command line to adapt the system to your project layout:
+| 🏷️ 目标 | 📝 说明 |
+|----------|---------|
+| `make menuconfig` | 🎛️ 启动交互式 TUI 配置界面 |
+| `make defconfig` | ⚡ 加载默认 defconfig → 生成 `.config` → 生成头文件 |
+| `make xxx_defconfig` | 📂 加载 `$(DEFCONFIG_DIR)/xxx_defconfig` |
+| `make oldconfig` | 🔄 将已有 `.config` 与新符号的默认值合并 |
+| `make savedefconfig` | 💾 将当前 `.config` 导出为最小 defconfig |
+| `make mrproper` | 🧹 清理 `.config`、`.config.old` 和生成的头文件 |
+
+---
+
+## ⚙️ 配置变量详解
+
+在你的 Makefile 中覆盖这些变量，或者通过命令行传入，以适配你的项目结构：
 
 ```makefile
-# Path to the root Kconfig file that sources all sub-Kconfigs
+# 🌲 Kconfig 根文件路径（通常用 source 引入子 Kconfig）
 KCONFIG_ROOT    ?= Kconfig
 
-# Path to the generated .config file
+# 📄 生成的 .config 文件路径
 CONFIG_FILE     ?= .config
 
-# Path to the generated C header
+# 🧾 生成的 C 头文件路径
 CONFIG_HEADER   ?= include/kconfig.h
 
-# Directory containing defconfig files
+# 📂 defconfig 文件存放目录
 DEFCONFIG_DIR   ?= configs
 
-# Default defconfig used by `make defconfig` (relative path)
+# 🎯 `make defconfig` 默认加载的 defconfig（相对路径）
 DEFAULT_DEFCONFIG ?= $(DEFCONFIG_DIR)/example_defconfig
 
-# Set to --keep-prefix to preserve CONFIG_ in C macro names
-# Default: empty (strips CONFIG_ prefix — CONFIG_FOO=y → #define FOO 1)
+# 🔤 设为 --keep-prefix 则在 C 宏中保留 CONFIG_ 前缀
+# 默认空（剥离前缀：CONFIG_FOO=y → #define FOO 1）
 HEADER_KEEP_PREFIX ?=
 ```
 
-### Variable Details
+### 🔍 各变量详解
 
-**`KCONFIG_ROOT`** — The top-level Kconfig file. This file typically uses `source` to pull in subsystem Kconfig files (e.g. `source "src/Kconfig"`). kconfiglib parses this tree to build the symbol database.
+#### 🌲 `KCONFIG_ROOT`
+顶层 Kconfig 文件路径。这个文件通常用 `source` 指令汇总各个子系统的 Kconfig 文件（例如 `source "src/Kconfig"`）。kconfiglib 解析这一整棵树来构建符号数据库。
+```
+KCONFIG_ROOT := path/to/my/Kconfig
+```
 
-**`CONFIG_FILE`** — Where the full configuration is saved. kconfiglib writes every symbol with its current value. This file is both the input and output of the configuration process.
+#### 📄 `CONFIG_FILE`
+完整配置的保存位置。kconfiglib 会把每个符号及其当前值都写入这个文件。它既是配置流程的输入，也是输出。
+```
+CONFIG_FILE := build/.config
+```
 
-**`CONFIG_HEADER`** — Path to the generated C header. Your C/C++ source code includes this header to access configuration values as preprocessor macros. By default, the `CONFIG_` prefix is stripped: `CONFIG_FOO=y` becomes `#define FOO 1`.
+#### 🧾 `CONFIG_HEADER`
+生成的 C 头文件路径。你的 C/C++ 源码 `#include` 这个头文件就能以预处理宏的形式读取配置值。
 
-**`DEFCONFIG_DIR`** — Directory that holds defconfig files. A defconfig is a *minimal* config — it only records values that differ from symbol defaults. `make xxx_defconfig` auto-looks up this directory: `make myboard_defconfig` loads `configs/myboard_defconfig`.
+⚠️ **默认行为**：`CONFIG_` 前缀会被剥离。即 `CONFIG_MAX_TASKS=32` → `#define MAX_TASKS 32`。
+如果想保留前缀，见下方的 [`HEADER_KEEP_PREFIX`](#-header_keep_prefix)。
 
-**`DEFAULT_DEFCONFIG`** — Which defconfig to load when you run `make defconfig` without specifying a name.
+```
+CONFIG_HEADER := build/include/generated/kconfig.h
+```
 
-**`HEADER_KEEP_PREFIX`** — Set to `--keep-prefix` if you want `CONFIG_FOO=y` to generate `#define CONFIG_FOO 1` instead of `#define FOO 1`. Useful if your existing codebase already uses the `CONFIG_` naming convention.
+#### 📂 `DEFCONFIG_DIR`
+存放 defconfig 文件的目录。defconfig 是一种**最小差异配置**——它只记录与符号默认值不同的条目，非常精简。
 
-## Integrating Into Your Project
+`make xxx_defconfig` 会自动到这个目录下查找：
+```bash
+make stm32f4_defconfig   # → 加载 configs/stm32f4_defconfig
+make qemu_defconfig      # → 加载 configs/qemu_defconfig
+```
 
-Add the `tools/` directory and `Makefile` to your project, then customize:
+```
+DEFCONFIG_DIR := boards
+```
+
+#### 🎯 `DEFAULT_DEFCONFIG`
+当你直接执行 `make defconfig`（不指定名称）时，加载哪个 defconfig。
+```
+DEFAULT_DEFCONFIG := $(DEFCONFIG_DIR)/stm32f4_defconfig
+```
+
+#### 🔤 `HEADER_KEEP_PREFIX`
+默认情况下，系统会剥离 `CONFIG_` 前缀。如果你的旧代码库已经大量使用 `CONFIG_` 命名规范，可以开启这个选项：
 
 ```makefile
-# In your project's Makefile, before including the kconfig Makefile:
+HEADER_KEEP_PREFIX := --keep-prefix
+```
+
+效果对比：
+
+| `.config` | 默认（空） | `--keep-prefix` |
+|-----------|-----------|-----------------|
+| `CONFIG_FOO=y` | `#define FOO 1` | `#define CONFIG_FOO 1` |
+| `CONFIG_BAR=42` | `#define BAR 42` | `#define CONFIG_BAR 42` |
+
+---
+
+## 🔌 集成到你的项目
+
+把 `tools/` 目录和 `Makefile` 放入你的项目，然后按需定制：
+
+```makefile
+# 在你的项目 Makefile 中，include 本系统的 Makefile：
 KCONFIG_ROOT    := Kconfig
 CONFIG_FILE     := build/.config
 CONFIG_HEADER   := build/include/kconfig.h
@@ -105,38 +162,45 @@ DEFAULT_DEFCONFIG := $(DEFCONFIG_DIR)/stm32f4_defconfig
 include kconfig/Makefile
 ```
 
-Or simply copy the contents and adjust paths to fit your project structure.
+或者直接把内容拷贝过去，调整路径适配你的项目结构 🧩
 
-## Writing Kconfig Files
+---
 
-See the example `Kconfig` in this repository for a complete demonstration. Key syntax:
+## ✍️ 编写 Kconfig 文件
+
+仓库中的示例 `Kconfig` 是一个完整演示。核心语法速览：
 
 ```kconfig
+# 🎚️ 布尔开关
 config MY_OPTION
-    bool "Enable my feature"
+    bool "启用某某功能"
     default y
     help
-      Description shown in menuconfig help panel.
+      在 menuconfig 帮助面板中显示的描述文字。
 
+# 🔢 数值配置
 config MY_VALUE
-    int "A numeric value"
+    int "一个数值"
     range 0 1024
     default 256
 
+# 🔘 单选
 choice
-    prompt "Select one"
+    prompt "选择一项"
     default OPTION_A
 
 config OPTION_A
-    bool "Option A"
+    bool "选项 A"
 
 config OPTION_B
-    bool "Option B"
+    bool "选项 B"
 endchoice
 ```
 
-Use `source "path/to/other/Kconfig"` to split large configurations across files.
+用 `source "path/to/other/Kconfig"` 将大型配置拆分到多个文件中 📁
 
-## License
+---
+
+## 📜 License
 
 MIT
