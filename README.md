@@ -39,6 +39,7 @@ Linux 内核的 Kconfig 系统与内核构建深度耦合，RT-Thread 的 Kconfi
 ## 📦 环境要求
 
 - 🐍 Python 3.8+
+- 🔨 GNU Make（Linux 系统自带，macOS 通过 Xcode CLT 或 `brew install make` 获得）
 - 📚 kconfiglib（包含 `menuconfig` 交互式 TUI）
 
 ### 🚀 安装 kconfiglib
@@ -82,16 +83,92 @@ make defconfig
 
 ---
 
-## 🎯 Makefile 目标一览
+## 🎯 命令详解
 
-| 🏷️ 目标 | 📝 说明 |
-|----------|---------|
-| `make menuconfig` | 🎛️ 启动交互式 TUI 配置界面 |
-| `make defconfig` | ⚡ 加载默认 defconfig → 生成 `.config` → 生成头文件 |
-| `make xxx_defconfig` | 📂 加载 `$(DEFCONFIG_DIR)/xxx_defconfig` |
-| `make oldconfig` | 🔄 将已有 `.config` 与新符号的默认值合并 |
-| `make savedefconfig` | 💾 将当前 `.config` 导出为最小 defconfig |
-| `make mrproper` | 🧹 清理 `.config`、`.config.old` 和生成的头文件 |
+### 🎛️ `make menuconfig`
+
+打开一个蓝底白字的交互式 TUI 界面，你可以用方向键浏览、空格键勾选、`?` 查看帮助。界面会从 `Kconfig` 文件中自动生成菜单层级——不需要看源码就能了解所有可配置项。
+
+配置完成后，按 `Save` 保存退出：
+- ✅ 自动生成 `.config`
+- ✅ 自动生成 `include/kconfig.h`
+
+按 `Quit` 不保存退出，一切如初。
+
+### ⚡ `make defconfig`
+
+快速恢复到某套预设配置。默认加载 `$(DEFAULT_DEFCONFIG)`（即 `configs/example_defconfig`），你也可以通过 `DEFAULT_DEFCONFIG` 变量改它。
+
+流程：**全量重置所有符号为默认值** → 应用 defconfig 中的差异条目 → 写入 `.config` → 生成头文件。
+
+> ⚠️ 这会**覆盖**你当前的 `.config`，旧配置全部丢失。想保留旧配置请先用 `make savedefconfig` 存一份。
+
+### 📂 `make xxx_defconfig` ⭐ 重点
+
+这是日常开发中最常用的命令——**一套 defconfig = 一块板子 / 一种工作模式**。
+
+#### 🗂️ 文件必须在哪里？
+
+defconfig 文件**必须放在 `configs/` 目录下**（或者你通过 `DEFCONFIG_DIR` 指定的目录），别无他处。系统会去 `configs/` 里查找对应的文件：
+
+```bash
+make stm32f4_defconfig   # 查找 configs/stm32f4_defconfig ✅
+make qemu_defconfig      # 查找 configs/qemu_defconfig   ✅
+make some/config         # ❌ 不行，不支持子目录路径
+```
+
+#### 🔄 增量还是覆盖？
+
+**覆盖。**`make xxx_defconfig` 的行为是"全量重置再应用"：
+
+1. 🧹 所有配置符号重置为 `Kconfig` 中定义的默认值
+2. 📝 读入 defconfig 文件中的差异条目，覆写对应符号
+3. 💾 写入 `.config`（完整配置）
+4. 🧾 生成 `include/kconfig.h` 头文件
+
+如果你手动改了 `.config` 之后又跑了一次 `make xxx_defconfig`，手动改动会**全部丢失**，不会保留。
+
+```bash
+# 典型工作流
+git clone https://github.com/your/project.git
+cd project
+make stm32f4_defconfig   # 一键配置好这块板子的所有选项
+make menuconfig          # 如有需要，微调几个选项
+make                     # 编译
+```
+
+#### 🎯 和 `make menuconfig` 怎么配合？
+
+- `make xxx_defconfig` → 选择"配置模板"（板级 / 模式级）
+- `make menuconfig`  → 在模板基础上"微调"
+- `make oldconfig`   → Kconfig 新增了选项时，补上默认值
+
+### 🔄 `make oldconfig`
+
+当你更新了 `Kconfig` 文件（比如新增了一个 `config NEW_OPTION`）但不想重头配置一遍时，用这个命令。
+
+它会读取你现有的 `.config`，保留所有已有选项的值，只对**新增的符号**填入其默认值。不会覆盖或丢失任何现存配置。
+
+> 适合升级场景：拉了个新版本代码，Kconfig 多了几个选项，跑一下 `make oldconfig` 就行。
+
+### 💾 `make savedefconfig`
+
+把当前 `.config` 导出为一个**最小差异 defconfig**——只保存那些和你 Kconfig 默认值不同的条目，非常精简。文件生成在 `configs/defconfig`。
+
+```bash
+make menuconfig       # 调好配置
+make savedefconfig    # 保存为 configs/defconfig
+mv configs/defconfig configs/myboard_defconfig  # 改个名
+```
+
+### 🧹 `make mrproper`
+
+彻底清理，删除所有生成物：
+- `.config`
+- `.config.old`
+- `include/kconfig.h`（以及你用 `CONFIG_HEADER` 指定的头文件路径）
+
+> 名字来自 Linux 内核传统——`mr proper` 清洁先生，比 `clean` 更干净 🧼
 
 ---
 
