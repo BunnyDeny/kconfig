@@ -115,7 +115,7 @@ mv configs/defconfig configs/stm32f4_defconfig  # 改个有意义的文件名
 
 ### 📂 `make xxx_defconfig` ⭐ 重点
 
-这是 **`savedefconfig` 的逆操作**。`xxx` 就是 `configs/` 目录下的 defconfig 文件名（去掉路径前缀和 `_defconfig` 后缀）：
+加载 `configs/` 目录下的一个 defconfig 文件，生成 `.config` 和头文件。这些 defconfig 文件通常是上一步 `make savedefconfig` 保存下来的。
 
 ```bash
 make stm32f4_defconfig   # 加载 configs/stm32f4_defconfig ✅
