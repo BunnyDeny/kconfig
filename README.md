@@ -115,14 +115,14 @@ mv configs/defconfig configs/stm32f4_defconfig  # 改个有意义的文件名
 
 ### 📂 `make xxx_defconfig` ⭐ 重点
 
-加载 `configs/` 目录下的一个 defconfig 文件，生成 `.config` 和头文件。这些 defconfig 文件通常是上一步 `make savedefconfig` 保存下来的。
+加载 `configs/` 目录下的一个 defconfig 文件，生成 `.config` 和头文件。
 
 ```bash
 make stm32f4_defconfig   # 加载 configs/stm32f4_defconfig ✅
 make qemu_defconfig      # 加载 configs/qemu_defconfig   ✅
 ```
 
-defconfig 必须放在 `configs/`（或 `DEFCONFIG_DIR` 指定的目录）下。
+defconfig 文件必须放在 `configs/`（或 `DEFCONFIG_DIR` 指定的目录）下。
 
 #### 🔄 增量还是覆盖？
 
