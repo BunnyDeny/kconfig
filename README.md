@@ -137,7 +137,7 @@ defconfig 必须放在 `configs/`（或 `DEFCONFIG_DIR` 指定的目录）下。
 这是日常开发的标准流程：
 
 ```bash
-# 1️⃣ 从一个已知配置开始（项目自带 / 别人的 defconfig / 用 make defconfig）
+# 1️⃣ 从一个已知配置开始（项目自带的xxx_defconfig / 别人的 xxx_defconfig / 用 make defconfig）
 make stm32f4_defconfig
 
 # 2️⃣ 按需微调
@@ -147,7 +147,7 @@ make menuconfig
 make savedefconfig
 mv configs/defconfig configs/myboard_defconfig
 
-# 4️⃣ 以后就能一键恢复了
+# 4️⃣ 以后就能一键恢复.h/.config到刚刚微调之后的状态了
 make myboard_defconfig
 ```
 
@@ -288,6 +288,7 @@ include kconfig/Makefile
 
 ## ✍️ 编写 Kconfig 文件
 
+`Kconfig`文件语法是很成熟的一个语法，具体语法格式自行上网参考
 仓库中的示例 `Kconfig` 是一个完整演示。核心语法速览：
 
 ```kconfig
