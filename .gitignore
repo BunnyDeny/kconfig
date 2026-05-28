@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# === Kconfig generated files ===
+.config
+.config.old
+include/kconfig.h
+include/*kconfig*.h

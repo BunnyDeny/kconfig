@@ -1,0 +1,88 @@
+# Example root Kconfig file
+#
+# This demonstrates how to structure a Kconfig hierarchy.
+# Customize or replace this file for your own project.
+
+mainmenu "Example Project — Kconfig Build System"
+
+comment "=== Architecture ==="
+
+config ARCH
+	string
+	default "arm" if ARCH_ARM
+	default "riscv" if ARCH_RISCV
+	default "x86"
+
+choice
+	prompt "Target Architecture"
+	default ARCH_ARM
+
+config ARCH_ARM
+	bool "ARM"
+
+config ARCH_RISCV
+	bool "RISC-V"
+
+config ARCH_X86
+	bool "x86"
+
+endchoice
+
+comment "=== Kernel / Core ==="
+
+menu "Core Configuration"
+
+config MAX_TASKS
+	int "Maximum number of tasks"
+	range 1 256
+	default 16
+	help
+	  The maximum number of tasks that can exist concurrently.
+
+config TICK_RATE_HZ
+	int "System tick frequency (Hz)"
+	range 1 10000
+	default 1000
+	help
+	  Number of system ticks per second. Higher values increase
+	  scheduling precision but also increase timer interrupt overhead.
+
+config ENABLE_TIME_SLICING
+	bool "Enable round-robin time slicing"
+	default y
+	help
+	  When enabled, tasks of equal priority will share CPU time
+	  in a round-robin fashion.
+
+config TIME_SLICE_TICKS
+	int "Time slice length (ticks)"
+	depends on ENABLE_TIME_SLICING
+	default 100
+	help
+	  Number of ticks each task runs before yielding to the next
+	  task at the same priority.
+
+endmenu
+
+comment "=== Optional Features ==="
+
+menu "Debug & Logging"
+
+config ENABLE_DEBUG
+	bool "Enable debug output"
+	default n
+	help
+	  Enable debug logging via serial console.
+
+config ENABLE_ASSERT
+	bool "Enable runtime assertions"
+	default y
+	help
+	  Enable assertion checks. Recommended for development.
+
+endmenu
+
+# Example of sourcing subdirectories (commented out)
+# source "src/Kconfig"
+# source "components/Kconfig"
+# source "tests/Kconfig"
