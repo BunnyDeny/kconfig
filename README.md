@@ -89,11 +89,7 @@ make defconfig
 
 打开一个蓝底白字的交互式 TUI 界面，你可以用方向键浏览、空格键勾选、`?` 查看帮助。界面会从 `Kconfig` 文件中自动生成菜单层级——不需要看源码就能了解所有可配置项。
 
-配置完成后，按 `Save` 保存退出：
-- ✅ 自动生成 `.config`
-- ✅ 自动生成 `include/kconfig.h`
-
-按 `Quit` 不保存退出，一切如初。
+配置完成后保存退出，系统会自动生成 `.config` 和 `include/kconfig.h`。未做修改时直接退出，做过修改会有保存提示。
 
 ### ⚡ `make defconfig`
 
