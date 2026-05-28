@@ -3,9 +3,9 @@
 Launch the interactive menuconfig TUI.
 
 Usage:
-    python3 tools/menuconfig.py                  # use ./Kconfig, ./.config
-    python3 tools/menuconfig.py -k path/Kconfig  # custom Kconfig path
-    python3 tools/menuconfig.py -k path/Kconfig -c path/.config -H path/output.h
+    python3 tools/run_menuconfig.py                  # use ./Kconfig, ./.config
+    python3 tools/run_menuconfig.py -k path/Kconfig  # custom Kconfig path
+    python3 tools/run_menuconfig.py -k path/Kconfig -c path/.config -H path/output.h
 
 Requires: apt install python3-kconfiglib  (or: pip3 install kconfiglib)
 """

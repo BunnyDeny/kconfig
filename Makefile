@@ -32,7 +32,7 @@ help:
 	@echo "  make mrproper          Remove generated files (.config, headers, etc.)"
 
 menuconfig:
-	@python3 $(TOOLS_DIR)/menuconfig.py \
+	@python3 $(TOOLS_DIR)/run_menuconfig.py \
 		-k $(KCONFIG_ROOT) \
 		-c $(CONFIG_FILE) \
 		-H $(CONFIG_HEADER)
