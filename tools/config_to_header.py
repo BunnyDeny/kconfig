@@ -42,6 +42,7 @@ def convert(dotconfig_path: str, header_path: str,
             if not m:
                 continue
             name, val = m.group(1), m.group(2)
+            val = val.strip('"')
 
             if not keep_prefix and name.startswith(prefix):
                 name = name[len(prefix):]

@@ -31,27 +31,31 @@ help:
 	@echo "  make savedefconfig     Save current config as minimal defconfig"
 	@echo "  make mrproper          Remove generated files (.config, headers, etc.)"
 
+# winpty: needed on Windows/MSYS2 for curses (windows-curses) to work
+# inside mintty. Auto-detected; set to empty to disable.
+WINPTY := $(shell winpty --version >/dev/null 2>&1 && echo winpty || echo)
+
 menuconfig:
-	@python3 $(TOOLS_DIR)/run_menuconfig.py \
+	@$(WINPTY) python $(TOOLS_DIR)/run_menuconfig.py \
 		-k $(KCONFIG_ROOT) \
 		-c $(CONFIG_FILE) \
 		-H $(CONFIG_HEADER)
 
 oldconfig:
-	@python3 $(TOOLS_DIR)/oldconfig.py \
+	@python $(TOOLS_DIR)/oldconfig.py \
 		-k $(KCONFIG_ROOT) \
 		-c $(CONFIG_FILE) \
 		-H $(CONFIG_HEADER)
 
 defconfig:
-	@python3 $(TOOLS_DIR)/load_defconfig.py $(DEFAULT_DEFCONFIG) \
+	@python $(TOOLS_DIR)/load_defconfig.py $(DEFAULT_DEFCONFIG) \
 		-k $(KCONFIG_ROOT) \
 		-c $(CONFIG_FILE) \
 		-H $(CONFIG_HEADER)
 
 %_defconfig:
 	@if [ -f "$(DEFCONFIG_DIR)/$@" ]; then \
-		python3 $(TOOLS_DIR)/load_defconfig.py $(DEFCONFIG_DIR)/$@ \
+		python $(TOOLS_DIR)/load_defconfig.py $(DEFCONFIG_DIR)/$@ \
 			-k $(KCONFIG_ROOT) \
 			-c $(CONFIG_FILE) \
 			-H $(CONFIG_HEADER); \
@@ -61,7 +65,7 @@ defconfig:
 	fi
 
 savedefconfig:
-	@python3 -c \
+	@python -c \
 		"from kconfiglib import Kconfig; \
 		k = Kconfig('$(KCONFIG_ROOT)'); \
 		k.load_config('$(CONFIG_FILE)'); \

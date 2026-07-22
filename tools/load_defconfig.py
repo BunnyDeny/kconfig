@@ -12,7 +12,10 @@ import sys
 import os
 import argparse
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add project root to sys.path so local kconfiglib.py is found
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_script_dir)
+sys.path.insert(0, _project_root)
 
 try:
     from kconfiglib import Kconfig
