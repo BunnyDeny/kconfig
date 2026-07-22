@@ -75,4 +75,5 @@ savedefconfig:
 mrproper:
 	@rm -f $(CONFIG_FILE) $(CONFIG_FILE).old
 	@rm -f $(CONFIG_HEADER)
+	@rm -rf */__pycache__/ ./__pycache__/
 	@echo "Cleaned generated config and header files."
